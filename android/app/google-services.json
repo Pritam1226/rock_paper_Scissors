@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "458795377767",
+    "project_id": "rockpaperscissors-prit",
+    "storage_bucket": "rockpaperscissors-prit.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:458795377767:android:c30a8475494b4c99b5a0c2",
+        "android_client_info": {
+          "package_name": "com.example.rock_paper_scissors"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "458795377767-afsr442gosk0ajvdgs9kk7aime0upjgc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZH0G48wppbDiIjkP4tsVZbnssZ0bPrLg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "458795377767-afsr442gosk0ajvdgs9kk7aime0upjgc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
