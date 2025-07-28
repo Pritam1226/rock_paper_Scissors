@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -17,16 +16,15 @@ class LoginScreen extends StatefulWidget {
   _LoginScreenState createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with TickerProviderStateMixin {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(); // ✅ Google Sign-In instance
   final _formKey = GlobalKey<FormState>();
-  
+
   bool _isPasswordVisible = false;
   bool _isLoading = false;
-  bool _isGoogleLoading = false; // ✅ Separate loading state for Google
   AnimationController? _glowController;
   AnimationController? _pulseController;
 
@@ -53,94 +51,37 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     super.dispose();
   }
 
-  // ✅ Google Sign-In Method
-  Future<void> _signInWithGoogle() async {
-    setState(() {
-      _isGoogleLoading = true;
-    });
-
-    try {
-      // Trigger the authentication flow
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
-      if (googleUser == null) {
-        // User canceled the sign-in
-        setState(() {
-          _isGoogleLoading = false;
-        });
-        return;
-      }
-
-      // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-      // Create a new credential
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      // Sign in to Firebase with the Google credential
-      await _auth.signInWithCredential(credential);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.celebration, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text('Welcome ${googleUser.displayName ?? 'User'}!'),
-                ),
-              ],
-            ),
-            backgroundColor: Colors.green.shade600,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      String errorMessage = 'Google sign-in failed. Please try again.';
-      
-      if (e.toString().contains('network-request-failed')) {
-        errorMessage = 'Network error. Please check your connection.';
-      } else if (e.toString().contains('account-exists-with-different-credential')) {
-        errorMessage = 'Account exists with different sign-in method.';
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(child: Text(errorMessage)),
-              ],
-            ),
-            backgroundColor: Colors.red.shade600,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isGoogleLoading = false;
-        });
-      }
-    }
+  // Email validation to ensure only Gmail addresses are allowed
+  bool _isValidGmail(String email) {
+    final gmailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@gmail\.com$');
+    return gmailRegex.hasMatch(email.toLowerCase());
   }
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Additional Gmail validation before attempting login
+    if (!_isValidGmail(_emailController.text.trim())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text('Please use a valid Gmail address (@gmail.com)'),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -151,7 +92,36 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-      
+
+      // Additional check to ensure the logged-in user has a Gmail address
+      if (userCredential.user != null && 
+          !_isValidGmail(userCredential.user!.email ?? '')) {
+        // Sign out the user if they don't have a Gmail address
+        await _auth.signOut();
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.error, color: Colors.white),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text('Access denied. Only Gmail accounts are allowed.'),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.red.shade600,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+        return;
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -172,17 +142,21 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       }
     } catch (e) {
       String errorMessage = 'Login failed. Please try again.';
-      
+
       if (e.toString().contains('user-not-found')) {
-        errorMessage = 'No user found with this email.';
+        errorMessage = 'No user found with this Gmail address.';
       } else if (e.toString().contains('wrong-password')) {
         errorMessage = 'Wrong password provided.';
       } else if (e.toString().contains('invalid-email')) {
-        errorMessage = 'Invalid email address.';
+        errorMessage = 'Invalid Gmail address format.';
       } else if (e.toString().contains('too-many-requests')) {
         errorMessage = 'Too many failed attempts. Please try again later.';
+      } else if (e.toString().contains('user-disabled')) {
+        errorMessage = 'This account has been disabled.';
+      } else if (e.toString().contains('invalid-credential')) {
+        errorMessage = 'Invalid email or password.';
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -210,22 +184,60 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     }
   }
 
-  Future<void> _loginAsGuest() async {
-    setState(() {
-      _isLoading = true;
-    });
+  Future<void> _resetPassword() async {
+    if (_emailController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.warning, color: Colors.white),
+              SizedBox(width: 12),
+              Text('Please enter your Gmail address first'),
+            ],
+          ),
+          backgroundColor: Colors.orange.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (!_isValidGmail(_emailController.text.trim())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 12),
+              Text('Please enter a valid Gmail address'),
+            ],
+          ),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
 
     try {
-      await _auth.signInAnonymously();
+      await _auth.sendPasswordResetEmail(email: _emailController.text.trim());
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.white),
+                Icon(Icons.email, color: Colors.white),
                 SizedBox(width: 12),
-                Text('Signed in as guest!'),
+                Expanded(
+                  child: Text('Password reset email sent! Check your Gmail inbox.'),
+                ),
               ],
             ),
             backgroundColor: Colors.blue.shade600,
@@ -237,14 +249,22 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         );
       }
     } catch (e) {
+      String errorMessage = 'Failed to send password reset email.';
+      
+      if (e.toString().contains('user-not-found')) {
+        errorMessage = 'No account found with this Gmail address.';
+      } else if (e.toString().contains('invalid-email')) {
+        errorMessage = 'Invalid Gmail address format.';
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Row(
+            content: Row(
               children: [
-                Icon(Icons.error, color: Colors.white),
-                SizedBox(width: 12),
-                Text('Failed to sign in as guest'),
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(child: Text(errorMessage)),
               ],
             ),
             backgroundColor: Colors.red.shade600,
@@ -254,12 +274,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             ),
           ),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
       }
     }
   }
@@ -292,7 +306,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.white.withOpacity(0.1 + (_glowController!.value * 0.1)),
+                color: Colors.white.withOpacity(
+                  0.1 + (_glowController!.value * 0.1),
+                ),
                 blurRadius: 15 + (_glowController!.value * 5),
                 spreadRadius: 1,
                 offset: const Offset(0, 2),
@@ -327,7 +343,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               suffixIcon: isPassword
                   ? IconButton(
                       icon: Icon(
-                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                         color: Colors.white.withOpacity(0.8),
                       ),
                       onPressed: () {
@@ -355,24 +373,15 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
-                borderSide: const BorderSide(
-                  color: Colors.white,
-                  width: 2,
-                ),
+                borderSide: const BorderSide(color: Colors.white, width: 2),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
-                borderSide: BorderSide(
-                  color: Colors.red.shade300,
-                  width: 2,
-                ),
+                borderSide: BorderSide(color: Colors.red.shade300, width: 2),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
-                borderSide: BorderSide(
-                  color: Colors.red.shade400,
-                  width: 2,
-                ),
+                borderSide: BorderSide(color: Colors.red.shade400, width: 2),
               ),
               errorStyle: TextStyle(
                 color: Colors.red.shade200,
@@ -397,7 +406,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     required List<Color> gradientColors,
     required Color shadowColor,
     bool isSecondary = false,
-    bool isGoogleButton = false, // ✅ New parameter for Google button
   }) {
     return AnimatedBuilder(
       animation: _pulseController!,
@@ -409,7 +417,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             borderRadius: BorderRadius.circular(25),
             boxShadow: [
               BoxShadow(
-                color: shadowColor.withOpacity(0.3 + (_pulseController!.value * 0.2)),
+                color: shadowColor.withOpacity(
+                  0.3 + (_pulseController!.value * 0.2),
+                ),
                 blurRadius: 20 + (_pulseController!.value * 10),
                 spreadRadius: 2,
                 offset: const Offset(0, 4),
@@ -419,7 +429,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: (_isLoading || (isGoogleButton && _isGoogleLoading)) ? null : onPressed,
+              onTap: _isLoading ? null : onPressed,
               borderRadius: BorderRadius.circular(25),
               child: Container(
                 padding: const EdgeInsets.all(20),
@@ -438,7 +448,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if ((isGoogleButton && _isGoogleLoading) || (_isLoading && !isSecondary && !isGoogleButton)) ...[
+                    if (_isLoading && !isSecondary) ...[
                       const SizedBox(
                         width: 24,
                         height: 24,
@@ -455,20 +465,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(
-                          icon,
-                          color: Colors.white,
-                          size: 24,
-                        ),
+                        child: Icon(icon, color: Colors.white, size: 24),
                       ),
                       const SizedBox(width: 16),
                     ],
                     Text(
-                      (isGoogleButton && _isGoogleLoading) 
-                          ? 'Signing In...'
-                          : (_isLoading && !isSecondary && !isGoogleButton) 
-                              ? 'Signing In...' 
-                              : title,
+                      _isLoading && !isSecondary ? 'Signing In...' : title,
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -586,7 +588,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                             ),
                             const SizedBox(height: 16),
                             const Text(
-                              'Sign In to Continue',
+                              'Sign In with Gmail',
                               style: TextStyle(
                                 fontSize: 26,
                                 fontWeight: FontWeight.bold,
@@ -602,7 +604,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Choose your preferred sign-in method',
+                              'Only Gmail accounts (@gmail.com) are allowed',
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Colors.white.withOpacity(0.9),
@@ -616,76 +618,17 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     },
                   ),
 
-                  // ✅ Google Sign-In Button (First Priority)
-                  _buildActionButton(
-                    title: 'Continue with Google',
-                    icon: Icons.login,
-                    onPressed: _signInWithGoogle,
-                    gradientColors: [
-                      Colors.red.shade400,
-                      Colors.pink.shade600,
-                    ],
-                    shadowColor: Colors.red,
-                    isGoogleButton: true,
-                  ),
-
-                  // Divider
-                  Container(
-                    margin: const EdgeInsets.symmetric(vertical: 20),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            height: 2,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.transparent,
-                                  Colors.white.withOpacity(0.5),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            'OR',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Container(
-                            height: 2,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.white.withOpacity(0.5),
-                                  Colors.transparent,
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Email Field
+                  // Gmail Address Field
                   _buildTextField(
                     controller: _emailController,
-                    label: 'Email Address',
+                    label: 'Gmail Address',
                     icon: Icons.email,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
+                        return 'Please enter your Gmail address';
                       }
-                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                        return 'Please enter a valid email';
+                      if (!_isValidGmail(value)) {
+                        return 'Please enter a valid Gmail address (@gmail.com)';
                       }
                       return null;
                     },
@@ -714,18 +657,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Forgot password feature coming soon!'),
-                            backgroundColor: Colors.orange.shade600,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        );
-                      },
+                      onPressed: _resetPassword,
                       child: Text(
                         'Forgot Password?',
                         style: TextStyle(
@@ -742,7 +674,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
                   // Email Login Button
                   _buildActionButton(
-                    title: 'Sign In with Email',
+                    title: 'Sign In with Gmail',
                     icon: Icons.login,
                     onPressed: _login,
                     gradientColors: [
@@ -750,19 +682,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                       Colors.blue.shade600,
                     ],
                     shadowColor: Colors.cyan,
-                  ),
-
-                  // Guest Login Button
-                  _buildActionButton(
-                    title: 'Continue as Guest',
-                    icon: Icons.person_outline,
-                    onPressed: _loginAsGuest,
-                    gradientColors: [
-                      Colors.orange.shade400,
-                      Colors.red.shade500,
-                    ],
-                    shadowColor: Colors.orange,
-                    isSecondary: true,
                   ),
 
                   const SizedBox(height: 30),
@@ -773,10 +692,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       gradient: LinearGradient(
-                        colors: [
-                          Colors.purple.shade400,
-                          Colors.pink.shade500,
-                        ],
+                        colors: [Colors.purple.shade400, Colors.pink.shade500],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -793,7 +709,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Don't have an account? ",
+                          "Don't have a Gmail account? ",
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.9),
                             fontSize: 16,
@@ -809,6 +725,41 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Gmail Requirement Notice
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      color: Colors.orange.withOpacity(0.2),
+                      border: Border.all(
+                        color: Colors.orange.withOpacity(0.5),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.orange.shade200,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'This app requires a Gmail account to sign in. Other email providers are not supported.',
+                            style: TextStyle(
+                              color: Colors.orange.shade100,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),

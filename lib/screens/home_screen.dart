@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'game_screen.dart';
 import 'game_multiplayer_screen.dart';
+import 'game_online_multiplayer_screen.dart'; // Add this import for your online multiplayer screen
 import 'settings_screen.dart';
+import 'auth/login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -18,6 +21,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   AnimationController? _glowController;
   AnimationController? _pulseController;
 
@@ -40,6 +44,88 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _glowController?.dispose();
     _pulseController?.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogout() async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          );
+        },
+      );
+
+      // Sign out from Firebase
+      await _auth.signOut();
+
+      // Close loading dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Text('Logged out successfully'),
+              ],
+            ),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+
+      // Navigate to login screen and clear navigation stack
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => LoginScreen(
+              isDarkMode: widget.isDarkMode,
+              onThemeToggle: widget.onThemeToggle,
+            ),
+          ),
+          (Route<dynamic> route) => false,
+        );
+      }
+    } catch (e) {
+      // Close loading dialog if still open
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(child: Text('Logout failed: ${e.toString()}')),
+              ],
+            ),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildAnimatedButton({
@@ -216,12 +302,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ],
               ),
-              child: const DrawerHeader(
-                decoration: BoxDecoration(color: Colors.transparent),
+              child: DrawerHeader(
+                decoration: const BoxDecoration(color: Colors.transparent),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
+                    const CircleAvatar(
                       radius: 35,
                       backgroundColor: Colors.white,
                       child: Icon(
@@ -230,8 +316,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         color: Colors.deepPurple,
                       ),
                     ),
-                    SizedBox(height: 16),
-                    Text(
+                    const SizedBox(height: 16),
+                    const Text(
                       '🎮 Game Menu',
                       style: TextStyle(
                         color: Colors.white,
@@ -247,8 +333,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
                     ),
                     Text(
-                      'Rock Paper Scissors',
-                      style: TextStyle(color: Colors.white70, fontSize: 16),
+                      'Welcome, ${_auth.currentUser?.email?.split('@')[0] ?? 'User'}!',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),
@@ -547,7 +636,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
 
                       _buildAnimatedButton(
-                        title: '👥 Multiplayer Mode',
+                        title: '👥 Local Multiplayer',
                         subtitle: 'Play with friends locally',
                         icon: Icons.group,
                         gradientColors: [
@@ -560,6 +649,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             context,
                             MaterialPageRoute(
                               builder: (_) => const GameMultiplayerScreen(),
+                            ),
+                          );
+                        },
+                      ),
+
+                      // NEW: Online Multiplayer Button
+                      _buildAnimatedButton(
+                        title: '🌐 Online Multiplayer',
+                        subtitle: 'Play with friends online',
+                        icon: Icons.wifi,
+                        gradientColors: [
+                          Colors.green.shade400,
+                          Colors.teal.shade600,
+                        ],
+                        shadowColor: Colors.green,
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const GameOnlineMultiplayerScreen(),
                             ),
                           );
                         },
@@ -724,9 +833,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ],
           ),
-          content: const Text(
-            'Are you sure you want to log out?',
-            style: TextStyle(fontSize: 16),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Are you sure you want to log out?',
+                style: TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              if (_auth.currentUser?.email != null)
+                Text(
+                  'Signed in as: ${_auth.currentUser!.email}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+            ],
           ),
           actions: [
             TextButton(
@@ -749,23 +874,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               child: TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Row(
-                        children: [
-                          Icon(Icons.check_circle, color: Colors.white),
-                          SizedBox(width: 12),
-                          Text('Logged out successfully'),
-                        ],
-                      ),
-                      backgroundColor: Colors.green.shade600,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  );
+                  Navigator.of(context).pop(); // Close dialog first
+                  _handleLogout(); // Then handle logout
                 },
                 child: const Text(
                   'Log Out',
@@ -817,7 +927,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               SizedBox(height: 16),
               Text(
-                'A modern, colorful implementation of the classic Rock Paper Scissors game with both single-player and multiplayer modes.',
+                'A modern, colorful implementation of the classic Rock Paper Scissors game with single-player, local multiplayer, and online multiplayer modes.',
                 style: TextStyle(fontSize: 16),
               ),
             ],
