@@ -5,6 +5,7 @@ import 'game_multiplayer_screen.dart';
 import 'game_online_multiplayer_screen.dart'; // Add this import for your online multiplayer screen
 import 'settings_screen.dart';
 import 'auth/login_screen.dart';
+import 'playerprofile_screen.dart'; // Added import for player profile screen
 
 class HomeScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -269,6 +270,52 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  // New Profile Avatar Widget
+  Widget _buildProfileAvatar() {
+    return AnimatedBuilder(
+      animation: _pulseController!,
+      builder: (context, child) {
+        return Container(
+          margin: const EdgeInsets.only(right: 8),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.white.withOpacity(
+                  0.3 + (_pulseController!.value * 0.2),
+                ),
+                blurRadius: 10 + (_pulseController!.value * 5),
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PlayerProfileScreen(
+                    isDarkMode: widget.isDarkMode,
+                    onThemeToggle: widget.onThemeToggle,
+                  ),
+                ),
+              );
+            },
+            child: CircleAvatar(
+              radius: 20,
+              backgroundColor: Colors.white.withOpacity(0.9),
+              child: const Icon(
+                Icons.person,
+                color: Colors.deepPurple,
+                size: 24,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildColorfulDrawer() {
     return Drawer(
       child: Container(
@@ -342,6 +389,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ],
                 ),
               ),
+            ),
+            _buildDrawerItem(
+              icon: Icons.person,
+              title: 'Profile',
+              subtitle: 'View your profile',
+              colors: [Colors.blue.shade400, Colors.cyan.shade500],
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PlayerProfileScreen(
+                      isDarkMode: widget.isDarkMode,
+                      onThemeToggle: widget.onThemeToggle,
+                    ),
+                  ),
+                );
+              },
             ),
             _buildDrawerItem(
               icon: Icons.settings,
@@ -500,7 +565,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ],
           ),
         ),
-        actions: [_buildMenuButton()],
+        actions: [
+          _buildProfileAvatar(), // Added profile avatar here
+          _buildMenuButton(),
+        ],
         centerTitle: true,
       ),
       endDrawer: _buildColorfulDrawer(),
