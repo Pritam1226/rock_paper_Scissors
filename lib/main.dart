@@ -99,10 +99,18 @@ class AuthWrapper extends StatelessWidget {
           );
         }
 
-        // ✅ If user is logged in, show home screen
+        // ✅ If user is logged in, show home screen directly
         if (snapshot.hasData && snapshot.data != null) {
           print('🏠 User logged in - Showing Home Screen');
           print('👤 User: ${snapshot.data!.email ?? 'Anonymous'}');
+
+          // Clear any existing navigation stack and show home
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (Navigator.canPop(context)) {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            }
+          });
+
           return HomeScreen(
             isDarkMode: isDarkMode,
             onThemeToggle: onThemeToggle,
