@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'game_screen.dart';
 import 'game_multiplayer_screen.dart';
-import 'game_online_multiplayer_screen.dart'; // Add this import for your online multiplayer screen
+import 'game_online_multiplayer_screen.dart';
 import 'settings_screen.dart';
 import 'auth/login_screen.dart';
-import 'playerprofile_screen.dart'; // Added import for player profile screen
+import 'playerprofile_screen.dart';
+import 'shop_screen.dart'; // Add this import for the shop screen
 
 class HomeScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -25,6 +26,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   AnimationController? _glowController;
   AnimationController? _pulseController;
+  AnimationController? _coinAnimationController;
+
+  // Currency state
+  int _coins = 150; // Regular coins
+  int _diamonds = 25; // Premium diamonds
 
   @override
   void initState() {
@@ -38,12 +44,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
+
+    _coinAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
     _glowController?.dispose();
     _pulseController?.dispose();
+    _coinAnimationController?.dispose();
     super.dispose();
   }
 
@@ -127,6 +139,198 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         );
       }
     }
+  }
+
+  // Currency Display Widget
+  Widget _buildCurrencyDisplay() {
+    return AnimatedBuilder(
+      animation: _coinAnimationController!,
+      builder: (context, child) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: [
+                Colors.amber.shade300.withOpacity(0.9),
+                Colors.orange.shade400.withOpacity(0.9),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.3),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.amber.withOpacity(
+                  0.3 + (_coinAnimationController!.value * 0.2),
+                ),
+                blurRadius: 15 + (_coinAnimationController!.value * 5),
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              // Regular Coins
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: Colors.yellow.shade200.withOpacity(0.5),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Transform.scale(
+                        scale: 1.0 + (_coinAnimationController!.value * 0.1),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.yellow.shade600,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.yellow.shade800.withOpacity(0.5),
+                                blurRadius: 4,
+                                offset: const Offset(1, 1),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.monetization_on,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$_coins',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  offset: Offset(1, 1),
+                                  blurRadius: 2,
+                                  color: Colors.black26,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Text(
+                            'Coins',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(width: 12),
+              
+              // Premium Diamonds
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: Colors.cyan.shade200.withOpacity(0.5),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Transform.scale(
+                        scale: 1.0 + (_coinAnimationController!.value * 0.15),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.cyan.shade400,
+                                Colors.blue.shade600,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.cyan.shade800.withOpacity(0.5),
+                                blurRadius: 6,
+                                offset: const Offset(1, 1),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.diamond,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$_diamonds',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  offset: Offset(1, 1),
+                                  blurRadius: 2,
+                                  color: Colors.black26,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Text(
+                            'Diamonds',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildAnimatedButton({
@@ -241,6 +445,60 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  // Shop Button Widget
+  Widget _buildShopButton() {
+    return AnimatedBuilder(
+      animation: _pulseController!,
+      builder: (context, child) {
+        return Container(
+          margin: const EdgeInsets.only(right: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+              colors: [
+                Colors.purple.shade400,
+                Colors.pink.shade500,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.purple.withOpacity(
+                  0.3 + (_pulseController!.value * 0.2),
+                ),
+                blurRadius: 8 + (_pulseController!.value * 4),
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.shopping_bag, color: Colors.white, size: 28),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ShopScreen(
+                    isDarkMode: widget.isDarkMode,
+                    onThemeToggle: widget.onThemeToggle,
+                    coins: _coins,
+                    diamonds: _diamonds,
+                    onCurrencyUpdate: (newCoins, newDiamonds) {
+                      setState(() {
+                        _coins = newCoins;
+                        _diamonds = newDiamonds;
+                      });
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildMenuButton() {
     return AnimatedBuilder(
       animation: _pulseController!,
@@ -270,7 +528,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // New Profile Avatar Widget
+  // Profile Avatar Widget
   Widget _buildProfileAvatar() {
     return AnimatedBuilder(
       animation: _pulseController!,
@@ -403,6 +661,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     builder: (_) => PlayerProfileScreen(
                       isDarkMode: widget.isDarkMode,
                       onThemeToggle: widget.onThemeToggle,
+                    ),
+                  ),
+                );
+              },
+            ),
+            _buildDrawerItem(
+              icon: Icons.shopping_bag,
+              title: 'Shop',
+              subtitle: 'Buy coins & items',
+              colors: [Colors.purple.shade400, Colors.pink.shade500],
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ShopScreen(
+                      isDarkMode: widget.isDarkMode,
+                      onThemeToggle: widget.onThemeToggle,
+                      coins: _coins,
+                      diamonds: _diamonds,
+                      onCurrencyUpdate: (newCoins, newDiamonds) {
+                        setState(() {
+                          _coins = newCoins;
+                          _diamonds = newDiamonds;
+                        });
+                      },
                     ),
                   ),
                 );
@@ -566,7 +850,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
         actions: [
-          _buildProfileAvatar(), // Added profile avatar here
+          _buildShopButton(), // Added shop button
+          _buildProfileAvatar(),
           _buildMenuButton(),
         ],
         centerTitle: true,
@@ -590,6 +875,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           child: Column(
             children: [
               const SizedBox(height: 10),
+
+              // Currency Display
+              _buildCurrencyDisplay(),
 
               // Welcome Section - Made Smaller
               AnimatedBuilder(
@@ -722,7 +1010,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         },
                       ),
 
-                      // NEW: Online Multiplayer Button
+                      // Online Multiplayer Button
                       _buildAnimatedButton(
                         title: '🌐 Online Multiplayer',
                         subtitle: 'Play with friends online',
