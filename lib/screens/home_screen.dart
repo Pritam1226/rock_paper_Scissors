@@ -333,7 +333,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildAnimatedButton({
+  // Square Game Mode Button Widget
+  Widget _buildSquareGameButton({
     required String title,
     required IconData icon,
     required VoidCallback onPressed,
@@ -345,16 +346,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       animation: _glowController!,
       builder: (context, child) {
         return Container(
-          width: double.infinity,
-          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(25),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
                 color: shadowColor.withOpacity(
                   0.3 + (_glowController!.value * 0.3),
                 ),
-                blurRadius: 20 + (_glowController!.value * 10),
+                blurRadius: 15 + (_glowController!.value * 5),
                 spreadRadius: 2,
                 offset: const Offset(0, 4),
               ),
@@ -364,11 +363,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             color: Colors.transparent,
             child: InkWell(
               onTap: onPressed,
-              borderRadius: BorderRadius.circular(25),
+              borderRadius: BorderRadius.circular(20),
               child: Container(
-                padding: const EdgeInsets.all(24),
+                height: 160,
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(20),
                   gradient: LinearGradient(
                     colors: gradientColors,
                     begin: Alignment.topLeft,
@@ -379,7 +379,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     width: 2,
                   ),
                 ),
-                child: Row(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -387,112 +388,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Icon(icon, color: Colors.white, size: 32),
+                      child: Icon(icon, color: Colors.white, size: 40),
                     ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              shadows: [
-                                Shadow(
-                                  offset: Offset(1, 1),
-                                  blurRadius: 3,
-                                  color: Colors.black26,
-                                ),
-                              ],
-                            ),
+                    const SizedBox(height: 12),
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                            offset: Offset(1, 1),
+                            blurRadius: 3,
+                            color: Colors.black26,
                           ),
-                          if (subtitle != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              subtitle,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white.withOpacity(0.9),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
                         ],
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withOpacity(0.9),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
+                    ],
                   ],
                 ),
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  // Shop Button Widget
-  Widget _buildShopButton() {
-    return AnimatedBuilder(
-      animation: _pulseController!,
-      builder: (context, child) {
-        return Container(
-          margin: const EdgeInsets.only(right: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(
-              colors: [
-                Colors.purple.shade400,
-                Colors.pink.shade500,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.purple.withOpacity(
-                  0.3 + (_pulseController!.value * 0.2),
-                ),
-                blurRadius: 8 + (_pulseController!.value * 4),
-                spreadRadius: 1,
-              ),
-            ],
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.shopping_bag, color: Colors.white, size: 28),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ShopScreen(
-                    isDarkMode: widget.isDarkMode,
-                    onThemeToggle: widget.onThemeToggle,
-                    coins: _coins,
-                    diamonds: _diamonds,
-                    onCurrencyUpdate: (newCoins, newDiamonds) {
-                      setState(() {
-                        _coins = newCoins;
-                        _diamonds = newDiamonds;
-                      });
-                    },
-                  ),
-                ),
-              );
-            },
           ),
         );
       },
@@ -521,52 +451,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             builder: (context) => IconButton(
               icon: const Icon(Icons.menu, color: Colors.white, size: 28),
               onPressed: () => Scaffold.of(context).openEndDrawer(),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // Profile Avatar Widget
-  Widget _buildProfileAvatar() {
-    return AnimatedBuilder(
-      animation: _pulseController!,
-      builder: (context, child) {
-        return Container(
-          margin: const EdgeInsets.only(right: 8),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.white.withOpacity(
-                  0.3 + (_pulseController!.value * 0.2),
-                ),
-                blurRadius: 10 + (_pulseController!.value * 5),
-                spreadRadius: 1,
-              ),
-            ],
-          ),
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PlayerProfileScreen(
-                    isDarkMode: widget.isDarkMode,
-                    onThemeToggle: widget.onThemeToggle,
-                  ),
-                ),
-              );
-            },
-            child: CircleAvatar(
-              radius: 20,
-              backgroundColor: Colors.white.withOpacity(0.9),
-              child: const Icon(
-                Icons.person,
-                color: Colors.deepPurple,
-                size: 24,
-              ),
             ),
           ),
         );
@@ -612,13 +496,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const CircleAvatar(
-                      radius: 35,
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.games,
-                        size: 40,
-                        color: Colors.deepPurple,
+                    // Profile Avatar moved here
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PlayerProfileScreen(
+                              isDarkMode: widget.isDarkMode,
+                              onThemeToggle: widget.onThemeToggle,
+                            ),
+                          ),
+                        );
+                      },
+                      child: CircleAvatar(
+                        radius: 35,
+                        backgroundColor: Colors.white.withOpacity(0.9),
+                        child: const Icon(
+                          Icons.person,
+                          size: 40,
+                          color: Colors.deepPurple,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -647,24 +546,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ],
                 ),
               ),
-            ),
-            _buildDrawerItem(
-              icon: Icons.person,
-              title: 'Profile',
-              subtitle: 'View your profile',
-              colors: [Colors.blue.shade400, Colors.cyan.shade500],
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PlayerProfileScreen(
-                      isDarkMode: widget.isDarkMode,
-                      onThemeToggle: widget.onThemeToggle,
-                    ),
-                  ),
-                );
-              },
             ),
             _buildDrawerItem(
               icon: Icons.shopping_bag,
@@ -827,6 +708,134 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  // Compact Currency Widget for App Bar
+  Widget _buildCompactCurrencyDisplay() {
+    return AnimatedBuilder(
+      animation: _coinAnimationController!,
+      builder: (context, child) {
+        return Container(
+          margin: const EdgeInsets.only(right: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: [
+                Colors.amber.shade400.withOpacity(0.9),
+                Colors.orange.shade500.withOpacity(0.9),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.3),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.amber.withOpacity(
+                  0.3 + (_coinAnimationController!.value * 0.2),
+                ),
+                blurRadius: 8 + (_coinAnimationController!.value * 3),
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Coins
+              Transform.scale(
+                scale: 1.0 + (_coinAnimationController!.value * 0.1),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.yellow.shade600,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.yellow.shade800.withOpacity(0.5),
+                        blurRadius: 2,
+                        offset: const Offset(0.5, 0.5),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.monetization_on,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '$_coins',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  shadows: [
+                    Shadow(
+                      offset: Offset(1, 1),
+                      blurRadius: 2,
+                      color: Colors.black26,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Diamonds
+              Transform.scale(
+                scale: 1.0 + (_coinAnimationController!.value * 0.15),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.cyan.shade400,
+                        Colors.blue.shade600,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.cyan.shade800.withOpacity(0.5),
+                        blurRadius: 2,
+                        offset: const Offset(0.5, 0.5),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.diamond,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '$_diamonds',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  shadows: [
+                    Shadow(
+                      offset: Offset(1, 1),
+                      blurRadius: 2,
+                      color: Colors.black26,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -838,7 +847,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           '🎮 Stone Paper Scissors',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 24,
+            fontSize: 22,
             fontWeight: FontWeight.bold,
             shadows: [
               Shadow(
@@ -850,8 +859,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
         actions: [
-          _buildShopButton(), // Added shop button
-          _buildProfileAvatar(),
+          _buildCompactCurrencyDisplay(),
           _buildMenuButton(),
         ],
         centerTitle: true,
@@ -876,289 +884,195 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             children: [
               const SizedBox(height: 10),
 
-              // Currency Display
-              _buildCurrencyDisplay(),
-
-              // Welcome Section - Made Smaller
-              AnimatedBuilder(
-                animation: _pulseController!,
-                builder: (context, child) {
-                  return Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 8,
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.white.withOpacity(0.2),
-                          Colors.white.withOpacity(0.1),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
-                        width: 2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.white.withOpacity(
-                            0.1 + (_pulseController!.value * 0.1),
-                          ),
-                          blurRadius: 15 + (_pulseController!.value * 3),
-                          spreadRadius: 1,
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Text(
-                            '🎯',
-                            style: TextStyle(fontSize: 32),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'ROCK PAPER SCISSORS',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  shadows: [
-                                    Shadow(
-                                      offset: Offset(1, 1),
-                                      blurRadius: 3,
-                                      color: Colors.black26,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Choose your game mode!',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white.withOpacity(0.9),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-
-              // Game Mode Buttons - Fixed with proper scrolling
+              // Game Mode Buttons in Square Grid
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 20),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
                       const SizedBox(height: 10),
 
-                      _buildAnimatedButton(
-                        title: '🤖 Play vs Computer',
-                        subtitle: 'Challenge the AI opponent',
-                        icon: Icons.computer,
-                        gradientColors: [
-                          Colors.cyan.shade400,
-                          Colors.blue.shade600,
-                        ],
-                        shadowColor: Colors.cyan,
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const GameScreen(),
-                            ),
-                          );
-                        },
-                      ),
-
-                      _buildAnimatedButton(
-                        title: '👥 Local Multiplayer',
-                        subtitle: 'Play with friends locally',
-                        icon: Icons.group,
-                        gradientColors: [
-                          Colors.purple.shade400,
-                          Colors.pink.shade600,
-                        ],
-                        shadowColor: Colors.purple,
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const GameMultiplayerScreen(),
-                            ),
-                          );
-                        },
-                      ),
-
-                      // Online Multiplayer Button
-                      _buildAnimatedButton(
-                        title: '🌐 Online Multiplayer',
-                        subtitle: 'Play with friends online',
-                        icon: Icons.wifi,
-                        gradientColors: [
-                          Colors.green.shade400,
-                          Colors.teal.shade600,
-                        ],
-                        shadowColor: Colors.green,
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const GameOnlineMultiplayerScreen(),
-                            ),
-                          );
-                        },
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Stats Section
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.orange.shade300,
-                              Colors.red.shade400,
+                      // Game Mode Grid
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 1.0,
+                        children: [
+                          _buildSquareGameButton(
+                            title: '🤖 Play vs Computer',
+                            subtitle: 'Challenge AI',
+                            icon: Icons.computer,
+                            gradientColors: [
+                              Colors.cyan.shade400,
+                              Colors.blue.shade600,
                             ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.orange.withOpacity(0.3),
-                              blurRadius: 15,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.emoji_events,
-                                  color: Colors.white,
-                                  size: 28,
+                            shadowColor: Colors.cyan,
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const GameScreen(),
                                 ),
-                                SizedBox(width: 12),
-                                Text(
-                                  '🏆 Quick Stats',
-                                  style: TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    shadows: [
-                                      Shadow(
-                                        offset: Offset(1, 1),
-                                        blurRadius: 2,
-                                        color: Colors.black26,
+                              );
+                            },
+                          ),
+
+                          _buildSquareGameButton(
+                            title: '👥 Local Multiplayer',
+                            subtitle: 'Play with friends',
+                            icon: Icons.group,
+                            gradientColors: [
+                              Colors.purple.shade400,
+                              Colors.pink.shade600,
+                            ],
+                            shadowColor: Colors.purple,
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const GameMultiplayerScreen(),
+                                ),
+                              );
+                            },
+                          ),
+
+                          _buildSquareGameButton(
+                            title: '🌐 Online Multiplayer',
+                            subtitle: 'Play online',
+                            icon: Icons.wifi,
+                            gradientColors: [
+                              Colors.green.shade400,
+                              Colors.teal.shade600,
+                            ],
+                            shadowColor: Colors.green,
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const GameOnlineMultiplayerScreen(),
+                                ),
+                              );
+                            },
+                          ),
+
+                          // Stats tile moved to grid
+                          AnimatedBuilder(
+                            animation: _glowController!,
+                            builder: (context, child) {
+                              return Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.orange.withOpacity(
+                                        0.3 + (_glowController!.value * 0.3),
+                                      ),
+                                      blurRadius: 15 + (_glowController!.value * 5),
+                                      spreadRadius: 2,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Container(
+                                  height: 160,
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.orange.shade300,
+                                        Colors.red.shade400,
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.3),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.emoji_events,
+                                        color: Colors.white,
+                                        size: 32,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      const Text(
+                                        '🏆 Stats',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          shadows: [
+                                            Shadow(
+                                              offset: Offset(1, 1),
+                                              blurRadius: 3,
+                                              color: Colors.black26,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          Column(
+                                            children: [
+                                              Text(
+                                                '0',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white.withOpacity(0.9),
+                                                ),
+                                              ),
+                                              Text(
+                                                'Games',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.white.withOpacity(0.8),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Column(
+                                            children: [
+                                              Text(
+                                                '0',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white.withOpacity(0.9),
+                                                ),
+                                              ),
+                                              Text(
+                                                'Wins',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.white.withOpacity(0.8),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    child: const Column(
-                                      children: [
-                                        Text(
-                                          '🎮',
-                                          style: TextStyle(fontSize: 32),
-                                        ),
-                                        SizedBox(height: 8),
-                                        Text(
-                                          'Games Played',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        Text(
-                                          '0',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    child: const Column(
-                                      children: [
-                                        Text(
-                                          '🏆',
-                                          style: TextStyle(fontSize: 32),
-                                        ),
-                                        SizedBox(height: 8),
-                                        Text(
-                                          'Wins',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        Text(
-                                          '0',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
+
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
