@@ -35,6 +35,118 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen>
   bool isLoading = true;
   bool isOwnProfile = false;
 
+  // Default avatars data
+  final List<Map<String, dynamic>> defaultAvatars = [
+    {
+      'id': 'default_1',
+      'name': 'Space Explorer',
+      'icon': Icons.rocket_launch,
+      'gradient': [Colors.purple, Colors.blue],
+    },
+    {
+      'id': 'default_2',
+      'name': 'Gaming Hero',
+      'icon': Icons.videogame_asset,
+      'gradient': [Colors.green, Colors.teal],
+    },
+    {
+      'id': 'default_3',
+      'name': 'Ninja Master',
+      'icon': Icons.sports_martial_arts,
+      'gradient': [Colors.red, Colors.orange],
+    },
+    {
+      'id': 'default_4',
+      'name': 'Tech Wizard',
+      'icon': Icons.computer,
+      'gradient': [Colors.cyan, Colors.blue],
+    },
+    {
+      'id': 'default_5',
+      'name': 'Champion',
+      'icon': Icons.emoji_events,
+      'gradient': [Colors.amber, Colors.orange],
+    },
+    {
+      'id': 'default_6',
+      'name': 'Lightning Fast',
+      'icon': Icons.flash_on,
+      'gradient': [Colors.yellow, Colors.red],
+    },
+    {
+      'id': 'default_7',
+      'name': 'Ice Cool',
+      'icon': Icons.ac_unit,
+      'gradient': [Colors.lightBlue, Colors.cyan],
+    },
+    {
+      'id': 'default_8',
+      'name': 'Fire Spirit',
+      'icon': Icons.local_fire_department,
+      'gradient': [Colors.deepOrange, Colors.red],
+    },
+  ];
+
+  // Avatar frames data
+  final List<Map<String, dynamic>> avatarFrames = [
+    {
+      'id': 'none',
+      'name': 'No Frame',
+      'colors': [Colors.transparent, Colors.transparent],
+      'width': 0.0,
+      'pattern': 'solid',
+    },
+    {
+      'id': 'bronze',
+      'name': 'Bronze Frame',
+      'colors': [Colors.brown.shade400, Colors.orange.shade700],
+      'width': 4.0,
+      'pattern': 'solid',
+    },
+    {
+      'id': 'silver',
+      'name': 'Silver Frame',
+      'colors': [Colors.grey.shade400, Colors.grey.shade600],
+      'width': 4.0,
+      'pattern': 'solid',
+    },
+    {
+      'id': 'gold',
+      'name': 'Gold Frame',
+      'colors': [Colors.yellow.shade400, Colors.orange.shade600],
+      'width': 4.0,
+      'pattern': 'solid',
+    },
+    {
+      'id': 'rainbow',
+      'name': 'Rainbow Frame',
+      'colors': [
+        Colors.red,
+        Colors.orange,
+        Colors.yellow,
+        Colors.green,
+        Colors.blue,
+        Colors.purple
+      ],
+      'width': 5.0,
+      'pattern': 'rainbow',
+    },
+    {
+      'id': 'diamond',
+      'name': 'Diamond Frame',
+      'colors': [Colors.cyan.shade400, Colors.blue.shade600],
+      'width': 4.0,
+      'pattern': 'dashed',
+    },
+    {
+      'id': 'legendary',
+      'name': 'Legendary Frame',
+      'colors': [Colors.purple.shade400, Colors.pink.shade600],
+      'width': 5.0,
+      'pattern': 'glow',
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -95,6 +207,9 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen>
           'rank_points': 1000,
           'title': 'Rookie',
           'avatar_url': null,
+          'avatar_type': 'default',
+          'selected_avatar': 'default_1',
+          'selected_frame': 'none',
           'economy': {'coins': 150, 'premium_currency': 25},
           'stats': {
             'total_games': 0,
@@ -189,6 +304,402 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen>
       print('Error loading profile: $e');
       setState(() => isLoading = false);
     }
+  }
+
+  void _showAvatarEditor() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            constraints: const BoxConstraints(maxHeight: 600, maxWidth: 400),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.deepPurple.shade800,
+                  Colors.indigo.shade700,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(18),
+                      topRight: Radius.circular(18),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.edit, color: Colors.white, size: 24),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Customize Avatar',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Content
+                Expanded(
+                  child: DefaultTabController(
+                    length: 2,
+                    child: Column(
+                      children: [
+                        // Tab Bar
+                        Container(
+                          color: Colors.white.withOpacity(0.05),
+                          child: const TabBar(
+                            indicatorColor: Color(0xFFffa726),
+                            labelColor: Colors.white,
+                            unselectedLabelColor: Colors.white60,
+                            tabs: [
+                              Tab(text: 'Avatars'),
+                              Tab(text: 'Frames'),
+                            ],
+                          ),
+                        ),
+
+                        // Tab Views
+                        Expanded(
+                          child: TabBarView(
+                            children: [
+                              _buildAvatarSelection(),
+                              _buildFrameSelection(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Footer
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.white.withOpacity(0.2),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Colors.amber.shade400, Colors.orange.shade500],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              _saveAvatarChanges();
+                            },
+                            style: TextButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            child: const Text(
+                              'Save',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAvatarSelection() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 0.8,
+        ),
+        itemCount: defaultAvatars.length,
+        itemBuilder: (context, index) {
+          final avatar = defaultAvatars[index];
+          final isSelected = profileData?['selected_avatar'] == avatar['id'];
+
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                profileData?['selected_avatar'] = avatar['id'];
+                profileData?['avatar_type'] = 'default';
+              });
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isSelected
+                      ? [Colors.amber.shade400, Colors.orange.shade500]
+                      : [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(
+                  color: isSelected
+                      ? Colors.amber
+                      : Colors.white.withOpacity(0.3),
+                  width: isSelected ? 3 : 1,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: Colors.amber.withOpacity(0.4),
+                          blurRadius: 12,
+                          spreadRadius: 2,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Column(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: avatar['gradient'],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        avatar['icon'],
+                        size: 32,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    flex: 1,
+                    child: Text(
+                      avatar['name'],
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (isSelected)
+                    const Icon(
+                      Icons.check_circle,
+                      color: Colors.amber,
+                      size: 16,
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildFrameSelection() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 0.9,
+        ),
+        itemCount: avatarFrames.length,
+        itemBuilder: (context, index) {
+          final frame = avatarFrames[index];
+          final isSelected = profileData?['selected_frame'] == frame['id'];
+
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                profileData?['selected_frame'] = frame['id'];
+              });
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isSelected
+                      ? [Colors.amber.shade400, Colors.orange.shade500]
+                      : [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(
+                  color: isSelected
+                      ? Colors.amber
+                      : Colors.white.withOpacity(0.3),
+                  width: isSelected ? 3 : 1,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: Colors.amber.withOpacity(0.4),
+                          blurRadius: 12,
+                          spreadRadius: 2,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Column(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: _buildFramePreview(frame),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    frame['name'],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (isSelected)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4),
+                      child: Icon(
+                        Icons.check_circle,
+                        color: Colors.amber,
+                        size: 16,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildFramePreview(Map<String, dynamic> frame) {
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: frame['id'] == 'none'
+            ? null
+            : frame['pattern'] == 'rainbow'
+                ? _buildRainbowBorder(frame['width'])
+                : Border.all(
+                    color: frame['colors'].length >= 2
+                        ? frame['colors'][0]
+                        : Colors.grey,
+                    width: frame['width'],
+                  ),
+        gradient: frame['id'] != 'none' && frame['pattern'] != 'rainbow'
+            ? LinearGradient(
+                colors: frame['colors'].length >= 2
+                    ? [frame['colors'][0], frame['colors'][1]]
+                    : [Colors.grey, Colors.grey.shade600],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
+      ),
+      child: Container(
+        margin: EdgeInsets.all(frame['width']),
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white24,
+        ),
+        child: const Icon(
+          Icons.person,
+          color: Colors.white54,
+          size: 24,
+        ),
+      ),
+    );
+  }
+
+  BoxBorder _buildRainbowBorder(double width) {
+    return Border.all(
+      width: width,
+      color: Colors.transparent,
+    );
+  }
+
+  void _saveAvatarChanges() {
+    // Here you would typically save to Firebase
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Avatar updated successfully!'),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   // Helper methods for rank colors and icons
@@ -607,67 +1118,157 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen>
   }
 
   Widget _buildAnimatedAvatar() {
+    final selectedFrame = profileData?['selected_frame'] ?? 'none';
+    final selectedAvatar = profileData?['selected_avatar'] ?? 'default_1';
+    final avatarType = profileData?['avatar_type'] ?? 'default';
+    
+    final frameData = avatarFrames.firstWhere(
+      (frame) => frame['id'] == selectedFrame,
+      orElse: () => avatarFrames[0],
+    );
+
     return AnimatedBuilder(
       animation: _glowController,
       builder: (context, child) {
-        return Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [
-                Colors.amber.shade400,
-                Colors.orange.shade500,
-                Colors.pink.shade400,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.amber.withOpacity(
-                  0.3 + (_glowController.value * 0.3),
-                ),
-                blurRadius: 15 + (_glowController.value * 10),
-                spreadRadius: 2,
+        return Stack(
+          children: [
+            // Avatar with frame
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: selectedFrame == 'none'
+                    ? null
+                    : selectedFrame == 'rainbow'
+                        ? _buildAnimatedRainbowBorder()
+                        : Border.all(
+                            color: frameData['colors'].isNotEmpty
+                                ? frameData['colors'][0]
+                                : Colors.transparent,
+                            width: frameData['width'],
+                          ),
+                gradient: selectedFrame != 'none' && selectedFrame != 'rainbow'
+                    ? LinearGradient(
+                        colors: frameData['colors'].length >= 2
+                            ? [frameData['colors'][0], frameData['colors'][1]]
+                            : [Colors.grey, Colors.grey.shade600],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+                boxShadow: selectedFrame == 'legendary'
+                    ? [
+                        BoxShadow(
+                          color: Colors.purple.withOpacity(
+                            0.4 + (_glowController.value * 0.3),
+                          ),
+                          blurRadius: 20 + (_glowController.value * 10),
+                          spreadRadius: 3,
+                        ),
+                      ]
+                    : [
+                        BoxShadow(
+                          color: Colors.amber.withOpacity(
+                            0.3 + (_glowController.value * 0.2),
+                          ),
+                          blurRadius: 15 + (_glowController.value * 5),
+                          spreadRadius: 2,
+                        ),
+                      ],
               ),
-            ],
-          ),
-          child: Container(
-            margin: const EdgeInsets.all(4),
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
+              child: Container(
+                margin: EdgeInsets.all(selectedFrame == 'none' ? 0 : frameData['width']),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                ),
+                child: ClipOval(
+                  child: avatarType == 'custom' && profileData!['avatar_url'] != null
+                      ? CachedNetworkImage(
+                          imageUrl: profileData!['avatar_url'],
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) =>
+                              const CircularProgressIndicator(),
+                          errorWidget: (context, url, error) =>
+                              _buildDefaultAvatarIcon(selectedAvatar),
+                        )
+                      : _buildDefaultAvatarIcon(selectedAvatar),
+                ),
+              ),
             ),
-            child: ClipOval(
-              child: profileData!['avatar_url'] != null
-                  ? CachedNetworkImage(
-                      imageUrl: profileData!['avatar_url'],
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) =>
-                          const CircularProgressIndicator(),
-                      errorWidget: (context, url, error) =>
-                          _buildDefaultAvatar(),
-                    )
-                  : _buildDefaultAvatar(),
-            ),
-          ),
+            
+            // Edit button (only for own profile)
+            if (isOwnProfile)
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: GestureDetector(
+                  onTap: _showAvatarEditor,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.amber.shade400, Colors.orange.shade500],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.edit,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         );
       },
     );
   }
 
-  Widget _buildDefaultAvatar() {
+  BoxBorder _buildAnimatedRainbowBorder() {
+    return Border.all(
+      width: 5,
+      color: HSVColor.fromAHSV(
+        1.0,
+        (_glowController.value * 360) % 360,
+        1.0,
+        1.0,
+      ).toColor(),
+    );
+  }
+
+  Widget _buildDefaultAvatarIcon(String avatarId) {
+    final avatar = defaultAvatars.firstWhere(
+      (a) => a['id'] == avatarId,
+      orElse: () => defaultAvatars[0],
+    );
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.deepPurple.shade400, Colors.indigo.shade500],
+          colors: avatar['gradient'],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
-      child: const Icon(Icons.person, size: 50, color: Colors.white),
+      child: Icon(
+        avatar['icon'],
+        size: 50,
+        color: Colors.white,
+      ),
     );
   }
 
